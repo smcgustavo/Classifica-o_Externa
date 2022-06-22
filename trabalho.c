@@ -15,12 +15,11 @@ typedef struct Cliente
 
 } Cliente;
 
-typedef struct No
+typedef struct no
 {
     Cliente cliente;
     short int congelado;
-    No * dir;
-    No * esq;    
+    struct no * dir;
 } No;
 
 
@@ -164,15 +163,29 @@ FILE * createNewPartition(){
     return fopen(path, "ab+");
 }
 
-void insereComPrioridade(No * raiz, No x){
+No * insereComPrioridade(No * raiz, No * x){
     No * pos = raiz;
-    while(pos->dir != NULL){
-        if(pos->cliente.CodCliente < x.cliente.CodCliente){
+    No * posAnt;
 
-        }
+    if(pos->cliente.CodCliente > x->cliente.CodCliente){
+        printf("foi aqui\n");
+        x->dir = pos;
+        raiz = x;
+        return x;
     }
+    while(pos->dir != NULL){
+        if(pos->cliente.CodCliente > x->cliente.CodCliente){
+            posAnt->dir = x;
+            x->dir = pos;
+            return raiz;
+        }
+        posAnt = pos;
+        pos = pos->dir;
+    }
+    pos->dir = x;
 }
 
+/*
 void classificacaoExterna(FILE * arquivo, int m){
     No * raiz;
     Cliente * aux;
@@ -185,10 +198,25 @@ void classificacaoExterna(FILE * arquivo, int m){
     }
     
 }
-
+*/
 int main () {
 
-    
+    No * raiz = malloc(sizeof(No));
+    Cliente * aux = criaCliente(15, "Gustavo", "12062000");
+    raiz->cliente = *aux;
+    raiz->congelado = 0;
+    No * aux2 = malloc(sizeof(No));
+    aux2->cliente = *criaCliente(12, "gustavo", "12062000");
+    No * aux3 = malloc(sizeof(No));
+    aux3->cliente = *criaCliente(14, "gustavo", "12062000");
+
+
+    free(aux);
+    raiz = insereComPrioridade(raiz, aux2);
+    //raiz = insereComPrioridade(raiz, aux3);
+    printf("%i\n", raiz->cliente.CodCliente);
+    printf("%i \n", raiz->dir->cliente.CodCliente);
+
     
     return 0;
 }
