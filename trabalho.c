@@ -163,26 +163,26 @@ FILE * createNewPartition(){
     return fopen(path, "ab+");
 }
 
-No * insereComPrioridade(No * raiz, No * x){
+void insereComPrioridade(No * raiz, No * x){
     No * pos = raiz;
     No * posAnt;
 
-    if(pos->cliente.CodCliente > x->cliente.CodCliente){
-        printf("foi aqui\n");
-        x->dir = pos;
+    if(raiz->cliente.CodCliente > x->cliente.CodCliente){
+        raiz->dir = x;
         raiz = x;
-        return x;
+        return;
     }
-    while(pos->dir != NULL){
+    while (pos->dir != NULL)
+    {
+        posAnt = pos;
+        pos = pos->dir;
         if(pos->cliente.CodCliente > x->cliente.CodCliente){
             posAnt->dir = x;
             x->dir = pos;
-            return raiz;
+            return;
         }
-        posAnt = pos;
-        pos = pos->dir;
     }
-    pos->dir = x;
+    
 }
 
 /*
@@ -208,12 +208,12 @@ int main () {
     No * aux2 = malloc(sizeof(No));
     aux2->cliente = *criaCliente(12, "gustavo", "12062000");
     No * aux3 = malloc(sizeof(No));
-    aux3->cliente = *criaCliente(14, "gustavo", "12062000");
+    aux3->cliente = *criaCliente(9, "gustavo", "12062000");
 
 
     free(aux);
-    raiz = insereComPrioridade(raiz, aux2);
-    //raiz = insereComPrioridade(raiz, aux3);
+    insereComPrioridade(raiz, aux2);
+    //insereComPrioridade(raiz, aux3);
     printf("%i\n", raiz->cliente.CodCliente);
     printf("%i \n", raiz->dir->cliente.CodCliente);
 
