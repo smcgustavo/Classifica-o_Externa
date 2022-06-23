@@ -6,6 +6,8 @@
 #define elementos 10000000
 
 int numberOfPartitions = 0;
+int freezedElements = 0;
+int numberOfElements = 0;
 
 typedef struct Cliente
 {
@@ -15,12 +17,11 @@ typedef struct Cliente
 
 } Cliente;
 
-typedef struct no
+typedef struct elemento
 {
     Cliente cliente;
     short int congelado;
-    struct no * dir;
-} No;
+} Elemento;
 
 
 void salvaCliente(FILE * arquivo, Cliente * aux){
@@ -54,8 +55,6 @@ void embaralhaVetor(int * vet, int iter, int tam){
         trocaElementos(vet, a, b);
     }
 }
-
-
 
 Cliente* criaCliente(int Cod, char * nome, char * data){
 
@@ -163,60 +162,87 @@ FILE * createNewPartition(){
     return fopen(path, "ab+");
 }
 
-void insereComPrioridade(No * raiz, No * x){
-    No * pos = raiz;
-    No * posAnt;
-
-    if(raiz->cliente.CodCliente > x->cliente.CodCliente){
-        raiz->dir = x;
-        raiz = x;
-        return;
-    }
-    while (pos->dir != NULL)
-    {
-        posAnt = pos;
-        pos = pos->dir;
-        if(pos->cliente.CodCliente > x->cliente.CodCliente){
-            posAnt->dir = x;
-            x->dir = pos;
-            return;
+int indexMenorElemento(Elemento * array, int m){
+    int menor = 0;
+    int i;
+    for(i = 0; i < m; i++){
+        if(array[i].congelado == 0){
+            menor = i;
+            break;
         }
     }
-    
+    for(i = 1; i < m; i++)
+    {
+        if(array[i].cliente.CodCliente < array[menor].cliente.CodCliente){
+            if(array[i].congelado == 0){
+                menor = i;
+            }
+        }
+    }
+    return menor;
 }
 
-/*
-void classificacaoExterna(FILE * arquivo, int m){
-    No * raiz;
-    Cliente * aux;
-    aux = leCliente(arquivo);
-    while (aux != NULL)
-    {
-        //le cliente
-        aux = leCliente(arquivo);
+void substituiNoArray(Elemento * array, int i, int m, FILE * dest, FILE * src){
+    
+    salvaCliente(dest, &array[i].cliente);
+    Cliente * aux = leCliente(src);
 
+    if(aux == NULL){
+        numberOfElements--;
+        free(aux);
+        return;
+    }
+
+    if(aux->CodCliente > array[i].cliente.CodCliente){
+        array[i].cliente = *aux;
+        array[i].congelado = 1;
+        freezedElements++;
+    }
+    else{
+        array[i].cliente = *aux;
+        array[i].congelado = 0;
+    }
+    free(aux);
+}
+
+void descongela(Elemento * array, int m){
+    for(int i = 0; i < m; i++){
+        array[i].congelado = 0;
+    }
+    freezedElements = 0;
+}
+
+void classificacaoExterna(FILE * arquivo, int m){
+    int i = 0;
+    Cliente * aux;
+    Elemento * array = malloc(sizeof(Elemento) * m);
+    numberOfElements = m;
+    FILE * dest = createNewPartition();
+
+    //Inicialização do array;
+    for(i = 0; i < m; i++){
+        aux = leCliente(arquivo);
+        array[i].cliente = *aux;
+        array[i].congelado = 0;
+    }
+    while (numberOfElements > 0)
+    {
+        if(freezedElements == m){
+            fclose(dest);
+            dest = createNewPartition();
+            descongela(array, m);
+        }
+        substituiNoArray(array, indexMenorElemento(array,m), m, dest, arquivo);
     }
     
 }
-*/
+
 int main () {
 
-    No * raiz = malloc(sizeof(No));
-    Cliente * aux = criaCliente(15, "Gustavo", "12062000");
-    raiz->cliente = *aux;
-    raiz->congelado = 0;
-    No * aux2 = malloc(sizeof(No));
-    aux2->cliente = *criaCliente(12, "gustavo", "12062000");
-    No * aux3 = malloc(sizeof(No));
-    aux3->cliente = *criaCliente(9, "gustavo", "12062000");
-
-
-    free(aux);
-    insereComPrioridade(raiz, aux2);
-    //insereComPrioridade(raiz, aux3);
-    printf("%i\n", raiz->cliente.CodCliente);
-    printf("%i \n", raiz->dir->cliente.CodCliente);
-
+    //FILE * arquivo = fopen("Partitions/Partition_2.dat", "ab+");
+    FILE * arquivo = fopen("Clientes.dat", "ab+");
+    classificacaoExterna(arquivo, 5000);
+    fclose(arquivo);
     
     return 0;
 }
